@@ -1,0 +1,178 @@
+/* Quick Pot & Fry styles.
+   Colors and sizes come from the App Designer's v3/v4 sketches.
+   Light mode only, system fonts only (nothing is downloaded). */
+
+/* ---- Basics ---- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-bottom: 140px; }
+body {
+  background: #FFF8EF;
+  color: #222;
+  font-family: -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  min-height: 100vh;
+}
+button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+button:focus-visible, a:focus-visible { outline: 3px solid #F28C38; outline-offset: 2px; }
+
+/* Keep everything a comfortable width on tablets and phones turned sideways. */
+#app { max-width: 640px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
+
+/* ---- Main screen: header ---- */
+header { padding: 20px 20px 8px; }
+h1.app-title { font-size: 28px; font-weight: 800; color: #2F6B4F; }
+.sub { font-size: 16px; color: #555; margin-top: 2px; }
+
+/* ---- Filters ---- */
+.filters { padding: 8px 20px 6px; display: flex; flex-direction: column; gap: 10px; }
+.row { display: flex; gap: 10px; }
+.chip {
+  flex: 1; height: 64px; border-radius: 20px; border: 2px solid #2F6B4F; background: #fff; color: #2F6B4F;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.2;
+}
+.chip .l { font-size: 17px; font-weight: 800; }
+.chip .s { font-size: 16px; font-weight: 700; margin-top: 2px; opacity: .85; }
+.chip.on { background: #2F6B4F; color: #fff; }
+.chip.on .s { opacity: 1; }
+.seg { display: flex; background: #fff; border: 2px solid #2F6B4F; border-radius: 26px; height: 52px; overflow: hidden; }
+.seg button { flex: 1; font-size: 16px; font-weight: 700; color: #2F6B4F; }
+.seg button.on { background: #2F6B4F; color: #fff; }
+.count { padding: 8px 22px 4px; font-size: 16px; color: #333; font-weight: 700; }
+
+/* ---- Gluten labels ---- */
+/* Green tag: ONLY for recipes marked glutenChecked: true. */
+.tag {
+  display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; font-size: 16px; font-weight: 800;
+  background: #D5EBDD; color: #1E4D38; border: 1px solid #9FCBB0; border-radius: 10px; padding: 4px 9px;
+}
+/* Amber label: for every recipe that is NOT checked. */
+.warn {
+  display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; font-size: 16px; font-weight: 800;
+  background: #FFE9C2; color: #7A4A00; border: 1.5px solid #E0962A; border-radius: 10px; padding: 4px 9px;
+}
+.by { font-size: 16px; color: #1E4D38; margin-top: 6px; font-weight: 600; }
+.banner {
+  margin: 2px 20px 8px; background: #FFE9C2; border: 2px solid #E0962A; color: #7A4A00; border-radius: 14px;
+  padding: 10px 12px; font-size: 16px; font-weight: 700; line-height: 1.35; display: flex; gap: 8px;
+}
+.demo-banner {
+  background: #5B2A86; color: #fff; font-size: 16px; font-weight: 800; text-align: center; padding: 8px 12px; line-height: 1.3;
+}
+
+/* ---- Recipe cards ---- */
+.list { padding: 6px 20px 24px; display: flex; flex-direction: column; gap: 12px; }
+.card {
+  display: flex; gap: 14px; background: #F1EEEA; border-radius: 16px; padding: 12px; align-items: center;
+  min-height: 104px; text-align: left; width: 100%;
+}
+.img { width: 72px; height: 72px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 38px; flex-shrink: 0; }
+.name { font-size: 18px; font-weight: 700; line-height: 1.2; }
+.meta { font-size: 16px; color: #444; margin-top: 4px; display: flex; gap: 10px; flex-wrap: wrap; }
+.time { color: #A84700; font-weight: 700; }
+
+/* ---- Empty (no match) screen ---- */
+.empty { margin: 28px 20px 24px; background: #F1EEEA; border-radius: 20px; padding: 36px 22px 28px; text-align: center; }
+.emo { font-size: 72px; }
+.et { font-size: 24px; font-weight: 800; margin-top: 12px; line-height: 1.25; }
+.eh { font-size: 17px; color: #444; margin-top: 10px; line-height: 1.4; }
+.btn-big {
+  margin-top: 24px; width: 100%; min-height: 64px; border-radius: 20px; background: #2F6B4F; color: #fff;
+  font-size: 21px; font-weight: 800; padding: 8px 16px;
+}
+.btn-outline {
+  margin-top: 12px; width: 100%; min-height: 56px; border-radius: 20px; background: #fff; color: #2F6B4F;
+  border: 2px solid #2F6B4F; font-size: 18px; font-weight: 800; padding: 8px 16px;
+}
+
+/* ---- Ingredients / recipe screen ---- */
+.top { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px 6px; gap: 10px; }
+.pill { min-height: 48px; padding: 0 16px; border-radius: 24px; background: #F1EEEA; font-size: 16px; font-weight: 700; display: flex; align-items: center; }
+.pill-green { min-height: 48px; padding: 0 18px; border-radius: 24px; border: 2px solid #2F6B4F; color: #2F6B4F; font-size: 16px; font-weight: 700; display: flex; align-items: center; background: #fff; }
+.h { padding: 10px 20px 0; font-size: 16px; color: #555; font-weight: 700; }
+h1.rname { padding: 2px 20px 0; font-size: 24px; font-weight: 800; line-height: 1.25; }
+.lab { padding: 10px 20px 0; }
+.lab .tag, .lab .warn { font-size: 16px; padding: 5px 10px; margin-top: 0; }
+.facts { margin: 12px 20px 0; font-size: 16px; color: #444; line-height: 1.5; }
+.facts b { color: #A84700; }
+ul.ingr { list-style: none; margin: 12px 20px 0; background: #F1EEEA; border-radius: 16px; overflow: hidden; }
+ul.ingr li { border-bottom: 1px solid #E2DDD6; }
+ul.ingr li:last-child { border-bottom: none; }
+ul.ingr button { width: 100%; min-height: 56px; display: flex; align-items: center; gap: 14px; padding: 8px 16px; font-size: 18px; text-align: left; }
+.box { width: 28px; height: 28px; border-radius: 8px; border: 2.5px solid #2F6B4F; background: #fff; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #fff; font-weight: 800; }
+li.ticked .box { background: #2F6B4F; }
+li.ticked .iname { text-decoration: line-through; color: #777; }
+.amt { margin-left: auto; color: #555; font-size: 16px; text-align: right; padding-left: 8px; white-space: nowrap; flex-shrink: 0; }
+.iname { flex: 1; min-width: 0; }
+.note {
+  margin: 12px 20px 0; background: #FFF3C9; border: 2px solid #E8C25A; border-radius: 14px; padding: 12px 14px;
+  font-size: 16px; font-weight: 700; color: #5C4400; display: flex; gap: 8px; line-height: 1.35;
+}
+.family {
+  margin: 14px 20px 0; background: #EEF3F8; border: 2px solid #B9CBDD; border-radius: 14px; padding: 12px 14px;
+  font-size: 16px; font-weight: 600; color: #2A3E52; display: flex; gap: 8px; line-height: 1.35;
+}
+.start-wrap { padding: 4px 20px 28px; }
+
+/* ---- Cooking view ---- */
+.cook { flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+.ctitle { padding: 8px 20px 0; font-size: 17px; color: #555; font-weight: 600; }
+.prog { padding: 10px 20px 0; }
+.prog .lbl { font-size: 18px; font-weight: 800; color: #2F6B4F; }
+.bar { display: flex; gap: 6px; margin-top: 8px; }
+.bar div { flex: 1; height: 8px; border-radius: 4px; background: #E2DDD6; }
+.bar .done { background: #2F6B4F; }
+.step { padding: 18px 20px 0; font-size: 27px; line-height: 1.35; font-weight: 600; }
+.timer { margin: 18px 20px 0; background: #FDE9D6; border: 3px solid #F28C38; border-radius: 20px; padding: 16px; text-align: center; }
+.timer.finished { background: #FFD9D0; border-color: #D2462B; }
+.timer .t { font-size: 64px; font-weight: 800; color: #B85E12; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.timer .what { font-size: 16px; color: #7a4a1c; font-weight: 600; margin-bottom: 4px; }
+.tbtns { display: flex; gap: 10px; margin-top: 12px; }
+.tbtns button { flex: 1; height: 56px; border-radius: 28px; font-size: 19px; font-weight: 800; }
+.tbtns button:disabled { opacity: .45; cursor: default; }
+.t-start { background: #B84E00; color: #fff; }
+.t-pause { background: #fff; color: #B84E00; border: 2px solid #B84E00; }
+.t-reset { flex: 0 0 auto !important; padding: 0 16px; background: #fff; color: #555; border: 2px solid #ccc; }
+.lock {
+  margin: 14px 20px 0; background: #FFF3C9; border: 2px solid #E8C25A; border-radius: 14px; padding: 12px 14px;
+  display: flex; gap: 10px; align-items: flex-start; font-size: 16px; line-height: 1.35; color: #5C4400; font-weight: 600;
+}
+/* Timer chips at the top of every screen. */
+.timer-chips { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: nowrap; overflow: hidden; gap: 8px; padding: 8px 20px; background: #FFF8EF; max-width: 640px; margin: 0 auto; }
+.timer-chips[hidden] { display: none; }
+.timer-chips.open { flex-direction: column; align-items: flex-start; }
+.tchip { white-space: nowrap; flex-shrink: 0; }
+.tchip-close { background: #fff; color: #222; border: 2px solid #999; }
+.contains-cook { padding: 0 20px; }
+.tchip { min-height: 44px; padding: 0 14px; border-radius: 22px; background: #B84E00; color: #fff; font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.loading { padding: 40px 20px; font-size: 18px; color: #555; text-align: center; }
+.contains { margin-top: 6px; font-size: 16px; font-weight: 800; color: #8A1F11; }
+.spacer { flex: 1; min-height: 16px; }
+/* Full-width strips at the bottom of the cooking view. */
+.gf { margin: 0 0 8px; background: #D5EBDD; color: #1E4D38; border-top: 2px solid #9FCBB0; border-bottom: 2px solid #9FCBB0; padding: 7px 12px; font-size: 16px; font-weight: 800; text-align: center; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gfw { margin: 0 0 8px; background: #FFE9C2; color: #7A4A00; border-top: 2px solid #E0962A; border-bottom: 2px solid #E0962A; padding: 7px 12px; font-size: 16px; font-weight: 800; text-align: center; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Sticky bottom bar: one-line gluten strip + Back/Next, always on screen. */
+.navbar { position: sticky; bottom: 0; background: #FFF8EF; z-index: 4; }
+.nav { display: flex; gap: 12px; padding: 0 20px 16px; }
+.nav button { height: 72px; border-radius: 20px; font-size: 22px; font-weight: 800; }
+.nav .back { flex: 1; background: #fff; border: 3px solid #2F6B4F; color: #2F6B4F; }
+.nav .next { flex: 1.6; background: #2F6B4F; color: #fff; }
+.nav button:disabled { opacity: .4; cursor: default; }
+
+/* Phone turned sideways: shorter screen, so shrink the big text a little. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .step { font-size: 22px; padding-top: 10px; }
+  .timer .t { font-size: 48px; }
+  .timer { margin-top: 10px; padding: 10px; }
+  .empty { margin-top: 12px; padding: 20px; }
+  .emo { font-size: 48px; }
+}
+
+/* ---- "Time's up!" alert ---- */
+.alarm { position: fixed; inset: 0; background: rgba(160, 30, 10, .88); display: flex; align-items: center; justify-content: center; z-index: 10; padding: 20px; }
+.alarm[hidden] { display: none; }
+.alarm-box { background: #fff; border-radius: 24px; padding: 28px 22px; text-align: center; width: 100%; max-width: 420px; }
+.alarm-emo { animation: pulse 1s infinite; }
+.alarm-emo { font-size: 72px; display: inline-block; }
+.alarm-title { font-size: 34px; font-weight: 800; color: #B0301A; margin-top: 6px; }
+.alarm-label { font-size: 19px; margin-top: 8px; color: #333; font-weight: 600; }
+@keyframes pulse { 50% { transform: scale(1.03); } }
+@media (prefers-reduced-motion: reduce) { .alarm-emo { animation: none; } }

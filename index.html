@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <meta charset="utf-8">
+  <!-- Makes the page fit phone screens instead of looking zoomed out. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#FFF8EF">
+  <title>Quick Pot &amp; Fry</title>
+  <!-- An empty icon, so the browser does not ask the server for one (that would show an error). -->
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Running timers show here as small chips, on every screen. -->
+  <div id="timer-chips" class="timer-chips" hidden></div>
+
+  <!-- The whole app is drawn inside this box by app.js. -->
+  <main id="app"><p class="loading">Loading…</p></main>
+
+  <!-- The "Time's up!" alert. Hidden until a timer finishes. -->
+  <div id="alarm" class="alarm" hidden role="alertdialog" aria-labelledby="alarm-title">
+    <div class="alarm-box">
+      <div class="alarm-emo">⏰</div>
+      <div id="alarm-title" class="alarm-title">Time's up!</div>
+      <div id="alarm-label" class="alarm-label"></div>
+      <button type="button" class="btn-big" data-action="stop-alarm">OK, stop the alarm</button>
+    </div>
+  </div>
+
+  <!-- First the recipe list, then the app itself. Order matters.
+       Only the 5 starter recipes are loaded. Drafts in recipes-drafts.js are NOT loaded. -->
+  <script src="recipes.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
