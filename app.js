@@ -514,6 +514,10 @@
     recipes = copy((window.RECIPES || []).concat(window.RECIPE_DRAFTS || []));
     window.addEventListener("hashchange", route);
     route();
+    // Home-screen / offline support: register the service worker when the browser allows it.
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register((APP_DIR || "./") + "sw.js").catch(function () { /* offline cache is optional */ });
+    }
   }
 
   start();
