@@ -17,10 +17,13 @@
   // ---------- Settings ----------
 
   // The filters the app starts with, and what "Reset filters" goes back to.
-  var DEFAULT_FILTERS = { under30: false, appliance: "all" };
+  var DEFAULT_FILTERS = { under30: false, favorites: false, appliance: "all" };
 
   // "30 min or less" means a total of 30 minutes or less (30 itself counts).
   var QUICK_LIMIT_MINUTES = 30;
+
+  // Favorites are saved on this phone under this key (a list of recipe ids).
+  var FAVORITES_KEY = "qpf-favorites";
 
   var APPLIANCE_LABELS = {
     instantPot: "♨️ Instant Pot",
@@ -32,6 +35,8 @@
 
   var recipes = [];                       // filled in by start()
   var filters = copy(DEFAULT_FILTERS);    // the filters right now
+  var searchQuery = "";                   // text in the search box (name or ingredient)
+  var favorites = {};                     // recipe id -> true, loaded from localStorage
   var ticked = {};                        // which ingredients were ticked off
   var timers = {};                        // every step timer, by "recipeId:stepNumber"
   var tickHandle = null;                  // the repeating clock for timers
@@ -73,6 +78,39 @@
     return null;
   }
 
+  // Load and save the hearted recipe ids. try/catch so private mode does not break the app.
+  function loadFavorites() {
+    try {
+      var raw = localStorage.getItem(FAVORITES_KEY);
+      var list = raw ? JSON.parse(raw) : [];
+      var map = {};
+      if (Array.isArray(list)) list.forEach(function (id) { if (typeof id === "string") map[id] = true; });
+      favorites = map;
+    } catch (e) { favorites = {}; }
+  }
+
+  function saveFavorites() {
+    try {
+      localStorage.setItem(FAVORITES_KEY, JSON.stringify(Object.keys(favorites)));
+    } catch (e) { /* storage full or blocked — favorites just will not persist */ }
+  }
+
+  function isFavorite(id) { return !!favorites[id]; }
+
+  function toggleFavorite(id) {
+    if (favorites[id]) delete favorites[id];
+    else favorites[id] = true;
+    saveFavorites();
+  }
+
+  // Heart button used on the list card and the ingredients screen.
+  function heartButton(id) {
+    var on = isFavorite(id);
+    return '<button type="button" class="heart' + (on ? " on" : "") + '" data-action="toggle-fav" data-id="' + esc(id) +
+      '" aria-pressed="' + on + '" aria-label="' + (on ? "Remove from favorites" : "Add to favorites") + '">' +
+      (on ? "♥" : "♡") + "</button>";
+  }
+
   // Turns milliseconds into "08:00" (or "1:05:00" for an hour or more).
   function clock(ms) {
     var s = Math.max(0, Math.ceil(ms / 1000));
@@ -85,11 +123,20 @@
   // SCREEN 1: the recipe list
   // ==========================================================================
 
-  // Which recipes pass the current filters.
+  // Which recipes pass the current filters and search text.
   function matchingRecipes() {
+    var q = searchQuery.trim().toLowerCase();
     return recipes.filter(function (r) {
+      if (filters.favorites && !isFavorite(r.id)) return false;
       if (filters.under30 && totalMinutes(r) > QUICK_LIMIT_MINUTES) return false;
       if (filters.appliance !== "all" && r.appliance !== filters.appliance) return false;
+      if (q) {
+        var inName = (r.name || "").toLowerCase().indexOf(q) !== -1;
+        var inIng = (r.ingredients || []).some(function (ing) {
+          return String(ing.item || "").toLowerCase().indexOf(q) !== -1;
+        });
+        if (!inName && !inIng) return false;
+      }
       return true;
     });
   }
@@ -106,34 +153,59 @@
   }
 
   function card(r) {
-    return '<button type="button" class="card" data-action="open" data-id="' + esc(r.id) + '">' +
+    return '<div class="card-row">' +
+      '<button type="button" class="card" data-action="open" data-id="' + esc(r.id) + '">' +
       '<div class="img" style="background:' + esc(r.color) + '">' + r.emoji + "</div><div>" +
       '<div class="name">' + esc(r.name) + "</div>" +
       '<div class="meta"><span class="time">Total ' + totalMinutes(r) + " min</span><span>" + APPLIANCE_LABELS[r.appliance] + "</span></div>" +
-      "</div></button>";
+      "</div></button>" + heartButton(r.id) + "</div>";
   }
 
   function renderList() {
-    var list = matchingRecipes();
     var html =
       '<header><h1 class="app-title">🍲 Quick Pot &amp; Fry</h1><div class="sub">' +
       "Fast Instant Pot &amp; air fryer dinners</div></header>" +
+      '<div class="search-wrap">' +
+      '<input type="search" class="search" id="recipe-search" placeholder="Search recipes or ingredients" ' +
+      'value="' + esc(searchQuery) + '" aria-label="Search recipes or ingredients" autocomplete="off">' +
+      // The clear button is always there but hidden when the box is empty.
+      '<button type="button" class="search-clear" data-action="clear-search" aria-label="Clear search"' + (searchQuery ? "" : " hidden") + '>✕</button>' +
+      "</div>" +
       '<div class="filters"><div class="row">' +
+      chip("toggle-favs", "Favorites", filters.favorites) +
       chip("toggle-quick", "30 min or less", filters.under30) +
       '</div><div class="seg" role="group" aria-label="Appliance">' +
       segButton("instantPot", "Instant Pot") + segButton("airFryer", "Air fryer") + segButton("all", "Both") +
       "</div></div>" +
-      '<div class="count" id="count">' + list.length + (list.length === 1 ? " recipe matches" : " recipes match") + "</div>";
+      '<div id="results">' + resultsHtml() + "</div>";
+    // Remember whether the search box had focus, so a redraw never pops the keyboard by itself.
+    var hadFocus = document.activeElement && document.activeElement.id === "recipe-search";
+    app.innerHTML = html;
+    var input = document.getElementById("recipe-search");
+    if (input && hadFocus) {
+      try { input.focus(); input.setSelectionRange(input.value.length, input.value.length); } catch (e) { /* ignore */ }
+    }
+  }
 
+  // Just the recipe count and the cards (or an empty message), below the search box and filters.
+  function resultsHtml() {
+    var list = matchingRecipes();
+    var html = '<div class="count" id="count">' + list.length + (list.length === 1 ? " recipe matches" : " recipes match") + "</div>";
     if (list.length > 0) {
       html += '<div class="list">' + list.map(card).join("") + "</div>";
+    } else if (filters.favorites && !searchQuery.trim() && !filters.under30 && filters.appliance === "all" && Object.keys(favorites).length === 0) {
+      // Favorites is On, but nothing has been hearted yet.
+      html += '<div class="empty" id="empty-no-favorites"><div class="emo">♡</div>' +
+        '<div class="et">No favorites yet</div>' +
+        '<div class="eh">Tap the ♡ heart on a recipe to save it here.</div>' +
+        '<button type="button" class="btn-big" data-action="reset-filters">Show all recipes</button></div>';
     } else {
       html += '<div class="empty" id="empty-no-match"><div class="emo">🥄</div>' +
-        '<div class="et">No recipes match these filters</div>' +
-        '<div class="eh">Tap <b>Reset filters</b> to go back to the usual view: 30 min or less Off, Both appliances.</div>' +
+        '<div class="et">No recipes match</div>' +
+        '<div class="eh">Try a different search, or tap <b>Reset filters</b> to clear search and go back to the usual view.</div>' +
         '<button type="button" class="btn-big" data-action="reset-filters">Reset filters</button></div>';
     }
-    app.innerHTML = html;
+    return html;
   }
 
   // ==========================================================================
@@ -141,9 +213,10 @@
   // ==========================================================================
 
   function renderIngredients(r, fromStep) {
-    var top = fromStep
+    var top = (fromStep
       ? '<button type="button" class="pill" data-action="go" data-href="#/cook/' + esc(r.id) + "/" + fromStep + '">‹ Back to step</button>'
-      : '<button type="button" class="pill" data-action="go" data-href="#/">‹ All recipes</button>';
+      : '<button type="button" class="pill" data-action="go" data-href="#/">‹ All recipes</button>') +
+      heartButton(r.id);
     var t = r.times || {};
     var parts = [];
     if (t.prep) parts.push("prep " + t.prep);
@@ -472,6 +545,16 @@
   app.addEventListener("click", handleTap);
   chipsBox.addEventListener("click", handleTap);
   document.getElementById("alarm").addEventListener("click", handleTap);
+  // Search box types letters; redraw the list on each change.
+  app.addEventListener("input", function (event) {
+    if (!event.target || event.target.id !== "recipe-search") return;
+    searchQuery = event.target.value || "";
+    // Update only the results, so the box you're typing in is left alone (keeps the keyboard and autocorrect steady).
+    var results = document.getElementById("results");
+    var clearBtn = app.querySelector(".search-clear");
+    if (clearBtn) clearBtn.hidden = !searchQuery;
+    if (results) results.innerHTML = resultsHtml(); else renderList();
+  });
 
   function handleTap(event) {
     var btn = event.target.closest("[data-action]");
@@ -480,8 +563,29 @@
     var tm;
     switch (action) {
       case "toggle-quick": filters.under30 = !filters.under30; renderList(); break;
+      case "toggle-favs": filters.favorites = !filters.favorites; renderList(); break;
       case "appliance": filters.appliance = btn.getAttribute("data-value"); renderList(); break;
-      case "reset-filters": filters = copy(DEFAULT_FILTERS); renderList(); break;
+      case "clear-search": searchQuery = ""; renderList(); break;
+      case "reset-filters": filters = copy(DEFAULT_FILTERS); searchQuery = ""; renderList(); break;
+      case "toggle-fav":
+        toggleFavorite(btn.getAttribute("data-id"));
+        // Stay on the same screen: redraw list or ingredients.
+        if (app.querySelector(".list") || app.querySelector(".empty")) renderList();
+        else {
+          var rid = btn.getAttribute("data-id");
+          var rec = findRecipe(rid);
+          if (rec) {
+            var from = null;
+            var back = app.querySelector('.pill[data-href^="#/cook/"]');
+            if (back) {
+              var href = back.getAttribute("data-href") || "";
+              var m = href.match(/#\/cook\/[^/]+\/(\d+)/);
+              if (m) from = m[1];
+            }
+            renderIngredients(rec, from);
+          }
+        }
+        break;
       case "open": location.hash = "#/recipe/" + encodeURIComponent(btn.getAttribute("data-id")); break;
       case "go": chipsOpen = false; location.hash = btn.getAttribute("data-href"); break;
       case "tick":
@@ -512,6 +616,7 @@
   function start() {
     // index.html loads only recipes.js. Test pages may also load recipes-drafts.js.
     recipes = copy((window.RECIPES || []).concat(window.RECIPE_DRAFTS || []));
+    loadFavorites();
     window.addEventListener("hashchange", route);
     route();
     // Home-screen / offline support: register the service worker when the browser allows it.
