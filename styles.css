@@ -38,26 +38,6 @@ h1.app-title { font-size: 28px; font-weight: 800; color: #2F6B4F; }
 .seg button.on { background: #2F6B4F; color: #fff; }
 .count { padding: 8px 22px 4px; font-size: 16px; color: #333; font-weight: 700; }
 
-/* ---- Gluten labels ---- */
-/* Green tag: ONLY for recipes marked glutenChecked: true. */
-.tag {
-  display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; font-size: 16px; font-weight: 800;
-  background: #D5EBDD; color: #1E4D38; border: 1px solid #9FCBB0; border-radius: 10px; padding: 4px 9px;
-}
-/* Amber label: for every recipe that is NOT checked. */
-.warn {
-  display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; font-size: 16px; font-weight: 800;
-  background: #FFE9C2; color: #7A4A00; border: 1.5px solid #E0962A; border-radius: 10px; padding: 4px 9px;
-}
-.by { font-size: 16px; color: #1E4D38; margin-top: 6px; font-weight: 600; }
-.banner {
-  margin: 2px 20px 8px; background: #FFE9C2; border: 2px solid #E0962A; color: #7A4A00; border-radius: 14px;
-  padding: 10px 12px; font-size: 16px; font-weight: 700; line-height: 1.35; display: flex; gap: 8px;
-}
-.demo-banner {
-  background: #5B2A86; color: #fff; font-size: 16px; font-weight: 800; text-align: center; padding: 8px 12px; line-height: 1.3;
-}
-
 /* ---- Recipe cards ---- */
 .list { padding: 6px 20px 24px; display: flex; flex-direction: column; gap: 12px; }
 .card {
@@ -89,8 +69,6 @@ h1.app-title { font-size: 28px; font-weight: 800; color: #2F6B4F; }
 .pill-green { min-height: 48px; padding: 0 18px; border-radius: 24px; border: 2px solid #2F6B4F; color: #2F6B4F; font-size: 16px; font-weight: 700; display: flex; align-items: center; background: #fff; }
 .h { padding: 10px 20px 0; font-size: 16px; color: #555; font-weight: 700; }
 h1.rname { padding: 2px 20px 0; font-size: 24px; font-weight: 800; line-height: 1.25; }
-.lab { padding: 10px 20px 0; }
-.lab .tag, .lab .warn { font-size: 16px; padding: 5px 10px; margin-top: 0; }
 .facts { margin: 12px 20px 0; font-size: 16px; color: #444; line-height: 1.5; }
 .facts b { color: #A84700; }
 ul.ingr { list-style: none; margin: 12px 20px 0; background: #F1EEEA; border-radius: 16px; overflow: hidden; }
@@ -141,15 +119,10 @@ li.ticked .iname { text-decoration: line-through; color: #777; }
 .timer-chips.open { flex-direction: column; align-items: flex-start; }
 .tchip { white-space: nowrap; flex-shrink: 0; }
 .tchip-close { background: #fff; color: #222; border: 2px solid #999; }
-.contains-cook { padding: 0 20px; }
 .tchip { min-height: 44px; padding: 0 14px; border-radius: 22px; background: #B84E00; color: #fff; font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .loading { padding: 40px 20px; font-size: 18px; color: #555; text-align: center; }
-.contains { margin-top: 6px; font-size: 16px; font-weight: 800; color: #8A1F11; }
 .spacer { flex: 1; min-height: 16px; }
-/* Full-width strips at the bottom of the cooking view. */
-.gf { margin: 0 0 8px; background: #D5EBDD; color: #1E4D38; border-top: 2px solid #9FCBB0; border-bottom: 2px solid #9FCBB0; padding: 7px 12px; font-size: 16px; font-weight: 800; text-align: center; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.gfw { margin: 0 0 8px; background: #FFE9C2; color: #7A4A00; border-top: 2px solid #E0962A; border-bottom: 2px solid #E0962A; padding: 7px 12px; font-size: 16px; font-weight: 800; text-align: center; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* Sticky bottom bar: one-line gluten strip + Back/Next, always on screen. */
+/* Sticky bottom bar: Back/Next, always on screen. */
 .navbar { position: sticky; bottom: 0; background: #FFF8EF; z-index: 4; }
 .nav { display: flex; gap: 12px; padding: 0 20px 16px; }
 .nav button { height: 72px; border-radius: 20px; font-size: 22px; font-weight: 800; }

@@ -9,11 +9,6 @@
      #/recipe/ID                one recipe: ingredients and "Start cooking"
      #/cook/ID/2                cooking view, step 2
      #/cook/ID/2/ingredients    ingredients, opened from the cooking view
-
-   GLUTEN SAFETY RULE (the most important rule in this app):
-     A recipe counts as gluten-free ONLY when its glutenChecked is exactly
-     true. Everything goes through the function isChecked() below, so there
-     is exactly one place that decides it.
    ========================================================================== */
 
 (function () {
@@ -22,14 +17,10 @@
   // ---------- Settings ----------
 
   // The filters the app starts with, and what "Reset filters" goes back to.
-  // Gluten-free starts ON. Reset never turns everything off.
-  var DEFAULT_FILTERS = { glutenFree: true, under30: false, appliance: "all" };
+  var DEFAULT_FILTERS = { under30: false, appliance: "all" };
 
   // "30 min or less" means a total of 30 minutes or less (30 itself counts).
   var QUICK_LIMIT_MINUTES = 30;
-
-  // Shown in "Before you cook" if a recipe forgets its own crossContact line.
-  var CROSS_CONTACT_DEFAULT = "Wash the pot, basket and tools well if they were used for foods with gluten.";
 
   var APPLIANCE_LABELS = {
     instantPot: "♨️ Instant Pot",
@@ -47,7 +38,6 @@
   var alarmHandle = null;                 // the repeating alarm beep
   var audioCtx = null;                    // used to make the beep sound
   var wakeLock = null;                    // asks the phone to keep the screen on
-  var demoMode = false;                   // true only for the ?demo=checked test
 
   var app = document.getElementById("app");
   var chipsBox = document.getElementById("timer-chips");
@@ -66,52 +56,9 @@
     });
   }
 
-  // THE ONE PLACE that decides whether a recipe is gluten-checked.
-  // ALL of these must be true, otherwise the recipe is NOT checked (amber):
-  //   1. containsGluten is exactly false (missing, true, "false", 0 all fail)
-  //   2. glutenChecked is exactly true (not "true", not 1)
-  //   3. checkedBy is a name, not empty
-  //   4. checkedDate is a real date written YYYY-MM-DD, and not in the future
-  function isChecked(recipe) {
-    if (containsGluten(recipe)) return false;
-    if (recipe.glutenChecked !== true) return false;
-    if (typeof recipe.checkedBy !== "string" || recipe.checkedBy.trim() === "") return false;
-    return isRealDate(recipe.checkedDate);
-  }
-
-  // Fail safe: a recipe counts as "no known gluten" ONLY when containsGluten
-  // is exactly false. Anything else (true, "false", 1, missing) means it may
-  // contain gluten, so it stays amber.
-  function containsGluten(recipe) {
-    return recipe.containsGluten !== false;
-  }
-
-  // True only for a real calendar date like "2026-10-30" (not "2026-02-30",
-  // not "10/30/26") that is not later than today on this phone.
-  function isRealDate(text) {
-    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(typeof text === "string" ? text : "");
-    if (!m) return false;
-    var d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
-    var real = d.getUTCFullYear() === Number(m[1]) && d.getUTCMonth() === Number(m[2]) - 1 && d.getUTCDate() === Number(m[3]);
-    return real && text <= todayText();
-  }
-
-  // Today's date on this phone, written "YYYY-MM-DD" (local time, not UTC).
-  function todayText() {
-    var now = new Date();
-    var two = function (n) { return (n < 10 ? "0" : "") + n; };
-    return now.getFullYear() + "-" + two(now.getMonth() + 1) + "-" + two(now.getDate());
-  }
-
   // A short name for timer chips and alarms, e.g. "Chili".
   function shortName(recipe) {
     return recipe.shortName || recipe.name.replace(/^(Instant Pot|Air Fryer) /, "").replace(/\s*\(.*\)$/, "");
-  }
-
-  function containsNote(recipe) {
-    if (recipe.containsGluten === true) return '<div class="contains" data-contains="yes">⛔ Contains gluten as written</div>';
-    if (containsGluten(recipe)) return '<div class="contains" data-contains="unset">⛔ Treated as containing gluten (containsGluten is not set to false)</div>';
-    return "";
   }
 
   // Adds up every part of the cooking time: prep, preheat, pressure build-up,
@@ -119,14 +66,6 @@
   function totalMinutes(recipe) {
     var t = recipe.times || {};
     return (t.prep || 0) + (t.preheat || 0) + (t.buildUp || 0) + (t.cook || 0) + (t.release || 0) + (t.finish || 0);
-  }
-
-  // Turns "2026-10-29" into "Oct 29, 2026".
-  function niceDate(text) {
-    var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text || "");
-    if (!m) return text ? String(text) : "an unknown date";
-    return months[Number(m[2]) - 1] + " " + Number(m[3]) + ", " + m[1];
   }
 
   function findRecipe(id) {
@@ -142,20 +81,6 @@
     return (h > 0 ? h + ":" + two(m) : two(m)) + ":" + two(sec);
   }
 
-  // ---------- Gluten labels (green only when checked, amber otherwise) ----------
-
-  function glutenLabel(recipe) {
-    if (isChecked(recipe)) {
-      return '<span class="tag" data-gluten="checked">🛡️ Gluten-free: check labels</span>' +
-        '<div class="by">Checked by ' + esc(recipe.checkedBy) + " on " + esc(niceDate(recipe.checkedDate)) + "</div>";
-    }
-    return '<span class="warn" data-gluten="unchecked">⚠ Not checked for gluten</span>' + containsNote(recipe);
-  }
-
-  function demoBanner() {
-    return demoMode ? '<div class="demo-banner">TEST DEMO ONLY: some recipes are marked “checked” with fake test data. Not real gluten checks.</div>' : "";
-  }
-
   // ==========================================================================
   // SCREEN 1: the recipe list
   // ==========================================================================
@@ -163,7 +88,6 @@
   // Which recipes pass the current filters.
   function matchingRecipes() {
     return recipes.filter(function (r) {
-      if (filters.glutenFree && !isChecked(r)) return false;           // safety rule
       if (filters.under30 && totalMinutes(r) > QUICK_LIMIT_MINUTES) return false;
       if (filters.appliance !== "all" && r.appliance !== filters.appliance) return false;
       return true;
@@ -186,42 +110,27 @@
       '<div class="img" style="background:' + esc(r.color) + '">' + r.emoji + "</div><div>" +
       '<div class="name">' + esc(r.name) + "</div>" +
       '<div class="meta"><span class="time">Total ' + totalMinutes(r) + " min</span><span>" + APPLIANCE_LABELS[r.appliance] + "</span></div>" +
-      (isChecked(r) ? '<span class="tag" data-gluten="checked">🛡️ Gluten-free: check labels</span>'
-                    : '<span class="warn" data-gluten="unchecked">⚠ Not checked for gluten</span>' + containsNote(r)) +
       "</div></button>";
   }
 
   function renderList() {
     var list = matchingRecipes();
-    var anyChecked = recipes.some(isChecked);
-    var html = demoBanner() +
+    var html =
       '<header><h1 class="app-title">🍲 Quick Pot &amp; Fry</h1><div class="sub">' +
-      (filters.glutenFree ? "Fast gluten-free dinners" : "Fast Instant Pot &amp; air fryer dinners") + "</div></header>" +
+      "Fast Instant Pot &amp; air fryer dinners</div></header>" +
       '<div class="filters"><div class="row">' +
-      chip("toggle-gf", "Gluten-free", filters.glutenFree) +
       chip("toggle-quick", "30 min or less", filters.under30) +
       '</div><div class="seg" role="group" aria-label="Appliance">' +
       segButton("instantPot", "Instant Pot") + segButton("airFryer", "Air fryer") + segButton("all", "Both") +
       "</div></div>" +
       '<div class="count" id="count">' + list.length + (list.length === 1 ? " recipe matches" : " recipes match") + "</div>";
 
-    if (!filters.glutenFree) {
-      html += '<div class="banner" id="gf-off-banner"><span>⚠</span><span>Gluten-free is Off. Some recipes below are not checked for gluten.</span></div>';
-    }
-
     if (list.length > 0) {
       html += '<div class="list">' + list.map(card).join("") + "</div>";
-    } else if (filters.glutenFree && !anyChecked) {
-      // Nothing has been checked for gluten yet (this is how the app ships).
-      html += '<div class="empty" id="empty-none-checked"><div class="emo">📝</div>' +
-        '<div class="et">No recipes have been checked for gluten yet</div>' +
-        '<div class="eh">Turn Gluten-free Off to see recipes that are not checked yet, or ask the recipe owner to check some.</div>' +
-        '<button type="button" class="btn-big" data-action="show-unchecked">Show unchecked recipes</button></div>';
     } else {
-      // Some recipes exist, but not with this mix of filters.
       html += '<div class="empty" id="empty-no-match"><div class="emo">🥄</div>' +
         '<div class="et">No recipes match these filters</div>' +
-        '<div class="eh">Tap <b>Reset filters</b> to go back to the usual view: Gluten-free On, 30 min or less Off, Both appliances.</div>' +
+        '<div class="eh">Tap <b>Reset filters</b> to go back to the usual view: 30 min or less Off, Both appliances.</div>' +
         '<button type="button" class="btn-big" data-action="reset-filters">Reset filters</button></div>';
     }
     app.innerHTML = html;
@@ -251,20 +160,15 @@
         '<span class="box">' + (on ? "✓" : "") + '</span><span class="iname">' + esc(ing.item) + '</span><span class="amt">' + esc(ing.amount || "") + "</span></button></li>";
     }).join("");
 
-    app.innerHTML = demoBanner() +
+    app.innerHTML =
       '<div class="top">' + top + "</div>" +
       '<div class="h">Ingredients</div><h1 class="rname">' + r.emoji + " " + esc(r.name) + "</h1>" +
-      '<div class="lab" id="gluten-label">' + glutenLabel(r) + "</div>" +
       (fromStep ? "" : '<div class="facts"><b>Total ' + totalMinutes(r) + " min</b> (" + parts.join(" + ") + " min) · " +
         APPLIANCE_LABELS[r.appliance] + " · Serves " + esc(r.servings) +
         "<br>Instant Pot build-up and release times are estimates; a fuller pot takes longer.</div>") +
       '<ul class="ingr">' + rows + "</ul>" +
       // Optional toddler tip (how spicy it is, how to cut it up).
       (r.familyNote ? '<div class="family" id="family-note"><span>👶</span><span><b>For your toddler</b><br>' + esc(r.familyNote) + ".</span></div>" : "") +
-      // "Before you cook" box: shown on every recipe, checked or not.
-      '<div class="note" id="before-you-cook"><span>🔎</span><span><b>Before you cook</b><br>' +
-        "Always read each label yourself before cooking. " + esc(r.glutenNote || "") + ".<br>" +
-        esc(r.crossContact || CROSS_CONTACT_DEFAULT) + "</span></div>" +
       (fromStep ? '<div class="start-wrap"></div>'
                 : '<div class="start-wrap"><button type="button" class="btn-big" data-action="go" data-href="#/cook/' + esc(r.id) + '/1">▶ Start cooking</button></div>');
   }
@@ -295,21 +199,15 @@
       ? '<div class="family" id="step-family-note"><span>👶</span><span><b>For your toddler</b><br>' + esc(r.familyNote) + ".</span></div>"
       : "";
 
-    // Slim one-line gluten strip, kept in the sticky bar right above Back/Next.
-    var strip = isChecked(r)
-      ? '<div class="gf" id="gluten-strip" data-gluten="checked">🛡️ Gluten-free: check labels</div>'
-      : '<div class="gfw" id="gluten-strip" data-gluten="unchecked">⚠ Not checked for gluten</div>';
-
-    app.innerHTML = '<div class="cook" data-recipe="' + esc(r.id) + '" data-step="' + stepNo + '">' + demoBanner() +
+    app.innerHTML = '<div class="cook" data-recipe="' + esc(r.id) + '" data-step="' + stepNo + '">' +
       '<div class="top"><button type="button" class="pill" data-action="go" data-href="#/recipe/' + esc(r.id) + '">✕ Exit</button>' +
       '<button type="button" class="pill-green" data-action="go" data-href="#/cook/' + esc(r.id) + "/" + stepNo + '/ingredients">📋 Ingredients</button></div>' +
       '<div class="ctitle">' + esc(r.name) + "</div>" +
-      (containsGluten(r) ? containsNote(r).replace('class="contains"', 'class="contains contains-cook"') : "") +
       '<div class="prog"><div class="lbl" id="step-label">Step ' + stepNo + " of " + total + '</div><div class="bar">' + bar + "</div></div>" +
       '<div class="step" id="step-text">' + esc(step.text) + "</div>" + toddler +
       timerHtml +
       '<div class="spacer"></div>' +
-      '<div class="navbar">' + strip +
+      '<div class="navbar">' +
       '<div class="nav"><button type="button" class="back" data-action="step-back"' + (stepNo === 1 ? " disabled" : "") + ">‹ Back</button>" +
       (stepNo < total
         ? '<button type="button" class="next" data-action="step-next">Next ›</button>'
@@ -538,7 +436,7 @@
   // ==========================================================================
 
   function notFound() {
-    app.innerHTML = demoBanner() + '<div class="empty"><div class="emo">🔍</div><div class="et">Recipe not found</div>' +
+    app.innerHTML = '<div class="empty"><div class="emo">🔍</div><div class="et">Recipe not found</div>' +
       '<div class="eh">This link does not match any recipe.</div>' +
       '<button type="button" class="btn-big" data-action="go" data-href="#/">See all recipes</button></div>';
   }
@@ -581,11 +479,9 @@
     var action = btn.getAttribute("data-action");
     var tm;
     switch (action) {
-      case "toggle-gf": filters.glutenFree = !filters.glutenFree; renderList(); break;
       case "toggle-quick": filters.under30 = !filters.under30; renderList(); break;
       case "appliance": filters.appliance = btn.getAttribute("data-value"); renderList(); break;
       case "reset-filters": filters = copy(DEFAULT_FILTERS); renderList(); break;
-      case "show-unchecked": filters.glutenFree = false; renderList(); break;
       case "open": location.hash = "#/recipe/" + encodeURIComponent(btn.getAttribute("data-id")); break;
       case "go": chipsOpen = false; location.hash = btn.getAttribute("data-href"); break;
       case "tick":
@@ -616,26 +512,9 @@
   function start() {
     // index.html loads only recipes.js. Test pages may also load recipes-drafts.js.
     recipes = copy((window.RECIPES || []).concat(window.RECIPE_DRAFTS || []));
-    // TEST ONLY: with ?demo=checked in the address, pretend a few recipes are
-    // checked so the green label can be tested. Real data is never changed.
-    if (demoMode && Array.isArray(window.DEMO_CHECKED)) {
-      window.DEMO_CHECKED.forEach(function (d) {
-        var r = findRecipe(d.id);
-        if (r) { r.glutenChecked = true; r.checkedBy = d.checkedBy; r.checkedDate = d.checkedDate; }
-      });
-    }
     window.addEventListener("hashchange", route);
     route();
   }
 
-  if (new URLSearchParams(location.search).get("demo") === "checked") {
-    demoMode = true;
-    var s = document.createElement("script");
-    s.src = APP_DIR + "tests/demo-checked.js";
-    s.onload = start;
-    s.onerror = start;
-    document.body.appendChild(s);
-  } else {
-    start();
-  }
+  start();
 })();
