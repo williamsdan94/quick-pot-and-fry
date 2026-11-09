@@ -1,5 +1,5 @@
 /* Quick Pot & Fry — offline cache (versioned). */
-var CACHE = 'qpf-v3-1';
+var CACHE = 'qpf-v4-1';
 var ASSETS = [
   './',
   './index.html',

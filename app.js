@@ -165,7 +165,7 @@
       '<div class="h">Ingredients</div><h1 class="rname">' + r.emoji + " " + esc(r.name) + "</h1>" +
       (fromStep ? "" : '<div class="facts"><b>Total ' + totalMinutes(r) + " min</b> (" + parts.join(" + ") + " min) · " +
         APPLIANCE_LABELS[r.appliance] + " · Serves " + esc(r.servings) +
-        "<br>Instant Pot build-up and release times are estimates; a fuller pot takes longer.</div>") +
+        (r.appliance === "airFryer" ? "" : "<br>Instant Pot build-up and release times are estimates; a fuller pot takes longer.") + "</div>") +
       '<ul class="ingr">' + rows + "</ul>" +
       // Optional toddler tip (how spicy it is, how to cut it up).
       (r.familyNote ? '<div class="family" id="family-note"><span>👶</span><span><b>For your toddler</b><br>' + esc(r.familyNote) + ".</span></div>" : "") +
